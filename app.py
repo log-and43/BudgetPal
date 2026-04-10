@@ -8,6 +8,8 @@ import tkinter as tk
 from tkinter import ttk, messagebox, filedialog, simpledialog
 from datetime import datetime, date
 import os, zipfile, copy, urllib.request, threading, json
+import numpy as np
+from collections import deque
 
 VERSION = "1.0.0"
 REPO_RAW = "https://raw.githubusercontent.com/log-and43/BudgetPal/main"
@@ -256,7 +258,7 @@ class BudgetApp(tk.Tk):
             ))
             blurred   = screenshot.filter(ImageFilter.GaussianBlur(radius=10))
             # Darken slightly so piggy pops
-            darkened  = Image.blend(blurred, Image.new("RGB", blurred.size, "#000000"), 0.25)
+            darkened  = Image.blend(blurred, Image.new("RGB", blurred.size, "#000000"), 0.5)
             bg_photo  = ImageTk.PhotoImage(darkened)
         except Exception:
             bg_photo  = None
@@ -272,22 +274,28 @@ class BudgetApp(tk.Tk):
 
         # ── Load GIF frames ───────────────────────────────────────────────
         try:
-            gif    = Image.open(gif_path)
+            gif = Image.open(gif_path)
             frames = []
+            bw = self.winfo_width()
+            bh = self.winfo_height()
             for i in range(gif.n_frames):
                 gif.seek(i)
-                # Convert preserving transparency — paste onto white base
-                base  = Image.new("RGBA", gif.size, (255, 255, 255, 255))
-                frame = gif.convert("RGBA")
-                base.paste(frame, mask=frame)
-                resized = base.resize((420, 315), Image.LANCZOS)
-                frames.append(ImageTk.PhotoImage(resized))
+                frame   = gif.convert("RGBA")
+                resized = frame.resize((420, 315), Image.LANCZOS)
+                # Composite onto a crop of the darkened backdrop so bg is invisible
+                x = (bw - 420) // 2
+                y = (bh - 315) // 2
+                base = darkened.crop((x, y, x+420, y+315)).convert("RGBA")
+                base.paste(resized, mask=resized)
+                frames.append(ImageTk.PhotoImage(base))
+
+
         except Exception as e:
             backdrop.destroy()
             if on_done: on_done()
             return
 
-        lbl = tk.Label(backdrop, bd=0, highlightthickness=0, bg="white")
+        lbl = tk.Label(backdrop, bd=0, highlightthickness=0)
         lbl.place(relx=0.5, rely=0.5, anchor="center")
         lbl._frames = frames
         idx = [0]
