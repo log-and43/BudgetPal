@@ -1,0 +1,4 @@
+# BudgetPal backgrounds manifest
+# List one filename per line.
+# The auto-updater will download any file listed here into the backgrounds/ folder.
+piggy_bank.gif
