@@ -11,14 +11,20 @@ import os, zipfile, copy, urllib.request, threading, json
 import numpy as np
 from collections import deque
 
+import sys as _sys
+# When frozen as a PyInstaller exe, use the exe's directory, not the temp bundle
+if getattr(_sys, "frozen", False):
+    APP_DIR = os.path.dirname(_sys.executable)
+else:
+    APP_DIR = os.path.dirname(os.path.abspath(__file__))
+
 VERSION = "1.0.0"
 try:
-    with open('version.txt', 'r') as file:
-        VERSION = file.readline().strip()
+    with open(os.path.join(APP_DIR, "version.txt"), "r") as _vf:
+        VERSION = _vf.readline().strip() or VERSION
 except Exception:
     pass
 REPO_RAW = "https://raw.githubusercontent.com/log-and43/BudgetPal/main"
-APP_DIR  = os.path.dirname(os.path.abspath(__file__))
 
 import platform
 IS_MAC = platform.system() == "Darwin"
@@ -825,10 +831,10 @@ class BudgetApp(tk.Tk):
 
         _raw_btn(frame, "Create Profile", _create,
                   bg=GREEN, fg="white", font=("Arial",10,"bold"), width=26
-                  ).grid(row=13, columnspan=5, pady=20)
+                  ).grid(row=14, columnspan=5, pady=20)
         _raw_btn(frame, "<- Back", self._show_landing,
                   bg="#BDC3C7", fg=DARK, font=("Arial",10,"bold"), width=16
-                  ).grid(row=14, columnspan=5)
+                  ).grid(row=15, columnspan=5)
         frame.columnconfigure(1, weight=1)
 
     # ── Obligation row widget ─────────────────────────────────────────────────
