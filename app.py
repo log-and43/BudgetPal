@@ -12,6 +12,11 @@ import numpy as np
 from collections import deque
 
 VERSION = "1.0.0"
+try:
+    with open('version.txt', 'r') as file:
+        VERSION = file.readline().strip()
+except Exception:
+    pass
 REPO_RAW = "https://raw.githubusercontent.com/log-and43/BudgetPal/main"
 APP_DIR  = os.path.dirname(os.path.abspath(__file__))
 
@@ -326,6 +331,7 @@ class BudgetApp(tk.Tk):
                 url  = f"{REPO_RAW}/version.txt"
                 with urllib.request.urlopen(url, timeout=5) as r:
                     remote = r.read().decode().strip()
+                print(f"Remote version: '{remote}', Local: '{VERSION}'")
                 if self._version_newer(remote, VERSION):
                     self.after(0, lambda: self._show_update_banner(
                         banner_parent, remote))
