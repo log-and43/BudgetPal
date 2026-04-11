@@ -130,8 +130,15 @@ mkdir -p "$APPLET_MACOS" "$APPLET_RES"
 # The launcher executable — uses the EXACT python we just verified
 cat > "$APPLET_MACOS/BudgetPal" << APPLET_EOF
 #!/bin/bash
+# Ensure display environment is set for GUI apps launched from .app bundle
+export PATH="/usr/local/bin:/usr/bin:/bin:/opt/homebrew/bin:$PATH"
 cd "$SCRIPT_DIR"
-"$PYTHON" "$SCRIPT_DIR/app.py"
+LOG="$SCRIPT_DIR/budgetpal_launch.log"
+echo "--- Launch $(date) ---" >> "$LOG"
+echo "Python: $PYTHON" >> "$LOG"
+echo "Dir: $SCRIPT_DIR" >> "$LOG"
+"$PYTHON" "$SCRIPT_DIR/app.py" >> "$LOG" 2>&1
+echo "Exit code: $?" >> "$LOG"
 APPLET_EOF
 chmod +x "$APPLET_MACOS/BudgetPal"
 
