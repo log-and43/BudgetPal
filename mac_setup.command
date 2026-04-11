@@ -113,6 +113,9 @@ echo "→ Installing pillow..."
     "$PYTHON" -m pip install --quiet --force-reinstall pillow
 }
 
+echo "→ Installing numpy..."
+"$PYTHON" -m pip install --quiet --upgrade numpy
+
 echo "✓ Dependencies installed."
 echo ""
 
