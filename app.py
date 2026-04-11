@@ -367,6 +367,92 @@ class BudgetApp(tk.Tk):
             banner.update_idletasks()
             threading.Thread(target=_run_update, daemon=True).start()
 
+        def _write_update_handler():
+            """
+            Write an OS-specific update handler script next to the app.
+            On Windows (frozen exe): rebuilds the exe via pip+pyinstaller,
+            then relaunches. On Linux/Mac: just relaunches app.py.
+            The script is launched on app exit via atexit.
+            """
+            import sys as _sys
+            frozen = getattr(_sys, "frozen", False)
+            system = platform.system()
+
+            if system == "Windows" and frozen:
+                # Windows: refreeze with PyInstaller then relaunch
+                handler_path = os.path.join(APP_DIR, "budgetpal_update.bat")
+                exe_path     = os.path.join(APP_DIR, "BudgetPal.exe")
+                pyinstaller_cmd = (
+                    "python -m PyInstaller --onefile --windowed --name BudgetPal"
+                    " --add-data user_data;user_data"
+                    " --add-data backgrounds;backgrounds"
+                    " --hidden-import numpy"
+                    " --hidden-import PIL --hidden-import PIL.Image"
+                    " --hidden-import PIL.ImageTk --hidden-import PIL.ImageFilter"
+                    " --hidden-import PIL.ImageGrab --hidden-import PIL.ImageEnhance"
+                    " --clean --noconfirm app.py"
+                )
+                lines = [
+                    "@echo off",
+                    "title BudgetPal Update",
+                    "echo.",
+                    "echo  ========================================",
+                    "echo   BudgetPal - Applying Update",
+                    "echo  ========================================",
+                    "echo.",
+                    "echo  Installing dependencies...",
+                    "pip install --upgrade openpyxl pillow numpy pyinstaller --quiet",
+                    "echo  Rebuilding BudgetPal.exe (this takes 1-2 minutes)...",
+                    'cd /d "' + APP_DIR + '"',
+                    pyinstaller_cmd,
+                    "copy /y dist\\BudgetPal.exe \"" + exe_path + "\"",
+                    "echo  Update complete! Launching BudgetPal...",
+                    'start "" "' + exe_path + '"',
+                    "del %~f0",
+                ]
+                script = "\r\n".join(lines) + "\r\n"
+                with open(handler_path, "w") as f:
+                    f.write(script)
+                return handler_path
+
+                return handler_path
+
+            elif system == "Darwin":
+                # macOS: relaunch app.py with the system Python
+                handler_path = os.path.join(APP_DIR, "budgetpal_update.command")
+                lines = [
+                    "#!/bin/bash",
+                    'cd "$(dirname "$0")"',
+                    "echo '========================================='",
+                    "echo ' BudgetPal - Applying Update'",
+                    "echo '========================================='",
+                    "python3 app.py",
+                    'rm -- "$0"',
+                ]
+                script = "\n".join(lines) + "\n"
+                with open(handler_path, "w") as f:
+                    f.write(script)
+                os.chmod(handler_path, 0o755)
+                return handler_path
+
+            else:
+                # Linux: relaunch app.py
+                handler_path = os.path.join(APP_DIR, "budgetpal_update.sh")
+                lines = [
+                    "#!/bin/bash",
+                    'cd "$(dirname "$0")"',
+                    "echo '========================================='",
+                    "echo ' BudgetPal - Applying Update'",
+                    "echo '========================================='",
+                    "python3 app.py",
+                    'rm -- "$0"',
+                ]
+                script = "\n".join(lines) + "\n"
+                with open(handler_path, "w") as f:
+                    f.write(script)
+                os.chmod(handler_path, 0o755)
+                return handler_path
+
         def _run_update():
             try:
                 files_to_update = ["app.py", "data_manager.py"]
@@ -389,7 +475,6 @@ class BudgetApp(tk.Tk):
                     os.makedirs(os.path.dirname(dest), exist_ok=True)
                     with urllib.request.urlopen(url, timeout=15) as r:
                         data = r.read()
-                    # Write to temp then replace atomically
                     tmp = dest + ".tmp"
                     with open(tmp, "wb") as f:
                         f.write(data)
@@ -399,18 +484,54 @@ class BudgetApp(tk.Tk):
                 with open(os.path.join(APP_DIR, "version.txt"), "w") as f:
                     f.write(remote_version)
 
+                # Write the OS update handler and register it for on-exit launch
+                handler = _write_update_handler()
+                if handler:
+                    import atexit, subprocess
+                    system = platform.system()
+                    def _launch_handler():
+                        try:
+                            if system == "Windows":
+                                subprocess.Popen(
+                                    ["cmd", "/c", "start", "cmd", "/k", handler],
+                                    shell=False, close_fds=True)
+                            elif system == "Darwin":
+                                subprocess.Popen(["open", "-a", "Terminal", handler])
+                            else:
+                                # Linux: open terminal emulator
+                                for term in ["x-terminal-emulator", "gnome-terminal",
+                                             "xterm", "konsole"]:
+                                    try:
+                                        subprocess.Popen([term, "--", "bash", handler])
+                                        break
+                                    except FileNotFoundError:
+                                        continue
+                        except Exception:
+                            pass
+                    atexit.register(_launch_handler)
+
                 self.after(0, _update_done)
             except Exception as e:
                 self.after(0, lambda: _update_failed(str(e)))
 
         def _update_done():
             for w in banner.winfo_children(): w.destroy()
+            import sys as _sys
+            if getattr(_sys, "frozen", False) and platform.system() == "Windows":
+                msg = ("  Files updated! Close the app — a terminal will open "
+                       "to rebuild and relaunch automatically.")
+            else:
+                msg = ("  Files updated! Close the app — it will relaunch "
+                       "with the new version automatically.")
             tk.Label(banner,
-                     text="  Update complete! Please restart the app to apply.",
+                     text=msg,
                      font=("Arial", 10, "bold"), fg=DARK, bg=GOLD).pack(side="left", padx=8)
-            tk.Button(banner, text="Dismiss", command=banner.destroy,
+            tk.Button(banner, text="Close App", command=self.destroy,
                       font=("Arial", 9), relief="raised",
                       cursor="hand2").pack(side="right", padx=8)
+            tk.Button(banner, text="Later", command=banner.destroy,
+                      font=("Arial", 9), relief="raised",
+                      cursor="hand2").pack(side="right", padx=4)
 
         def _update_failed(err):
             for w in banner.winfo_children(): w.destroy()
