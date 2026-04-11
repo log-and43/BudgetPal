@@ -138,6 +138,13 @@ if not exist "backgrounds" mkdir backgrounds
     --name BudgetPal ^
     --add-data "user_data;user_data" ^
     --add-data "backgrounds;backgrounds" ^
+    --hidden-import numpy ^
+    --hidden-import PIL ^
+    --hidden-import PIL.Image ^
+    --hidden-import PIL.ImageTk ^
+    --hidden-import PIL.ImageFilter ^
+    --hidden-import PIL.ImageGrab ^
+    --hidden-import PIL.ImageEnhance ^
     --clean ^
     --noconfirm ^
     app.py
@@ -156,9 +163,6 @@ echo.
 REM ── 5. Copy icon PNG for shortcut ────────────────────────────
 REM Write the piggy bank icon using Python
 echo  Creating desktop icon...
-"%PYTHON%" - << ICON_BLOCK 2>nul
-ICON_BLOCK
-
 REM Use PowerShell to write icon via Python inline
 "%PYTHON%" -c "
 import base64, os
