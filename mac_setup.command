@@ -136,10 +136,7 @@ cd "$SCRIPT_DIR"
 mkdir -p "$HOME/Library/Logs"
 LOG="$HOME/Library/Logs/BudgetPal.log"
 echo "--- Launch $(date) ---" >> "$LOG"
-echo "Python: $PYTHON" >> "$LOG"
-echo "Dir: $SCRIPT_DIR" >> "$LOG"
-"$PYTHON" "$SCRIPT_DIR/app.py" >> "$LOG" 2>&1
-echo "Exit code: $?" >> "$LOG"
+exec "$PYTHON" "$SCRIPT_DIR/app.py" 2>>"$LOG"
 APPLET_EOF
 chmod +x "$APPLET_MACOS/BudgetPal"
 
@@ -192,7 +189,6 @@ ICON_EOF
 # ── 6. Clear quarantine on everything ────────────────────────
 xattr -cr "$APPLET_DIR" 2>/dev/null || true
 xattr -cr "$SCRIPT_DIR" 2>/dev/null || true
-codesign --force --deep --sign - "$APPLET_DIR" 2>/dev/null || true
 
 # ── 7. Register with Launch Services so Finder shows icon ────
 /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister \
