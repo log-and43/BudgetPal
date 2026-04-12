@@ -424,7 +424,7 @@ class BudgetApp(tk.Tk):
                 return handler_path
 
             elif system == "Darwin":
-                # macOS: relaunch app.py with the system Python
+                # macOS: relaunch app.py with the same Python that's running now
                 handler_path = os.path.join(APP_DIR, "budgetpal_update.command")
                 lines = [
                     "#!/bin/bash",
@@ -432,7 +432,7 @@ class BudgetApp(tk.Tk):
                     "echo '========================================='",
                     "echo ' BudgetPal - Applying Update'",
                     "echo '========================================='",
-                    "python3 app.py",
+                    f'"{_sys.executable}" app.py',
                     'rm -- "$0"',
                 ]
                 script = "\n".join(lines) + "\n"
@@ -502,7 +502,7 @@ class BudgetApp(tk.Tk):
                                     ["cmd", "/c", "start", "cmd", "/k", handler],
                                     shell=False, close_fds=True)
                             elif system == "Darwin":
-                                subprocess.Popen(["open", "-a", "Terminal", handler])
+                                subprocess.Popen(["open", handler])
                             else:
                                 # Linux: open terminal emulator
                                 for term in ["x-terminal-emulator", "gnome-terminal",
