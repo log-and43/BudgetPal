@@ -339,14 +339,25 @@ class BudgetApp(tk.Tk):
         def _fetch():
             try:
                 url  = f"{REPO_RAW}/version.txt"
-                with urllib.request.urlopen(url, timeout=5) as r:
+                import ssl
+                ctx = ssl.create_default_context()
+                if IS_MAC:
+                    # Python on macOS doesn't use the system keychain by default;
+                    # load the macOS system cert bundle explicitly.
+                    for cafile in ("/etc/ssl/cert.pem",
+                                   "/usr/local/etc/openssl/cert.pem",
+                                   "/opt/homebrew/etc/openssl@3/cert.pem"):
+                        if os.path.exists(cafile):
+                            ctx = ssl.create_default_context(cafile=cafile)
+                            break
+                with urllib.request.urlopen(url, timeout=5, context=ctx) as r:
                     remote = r.read().decode().strip()
                 print(f"Remote version: '{remote}', Local: '{VERSION}'")
                 if self._version_newer(remote, VERSION):
                     self.after(0, lambda: self._show_update_banner(
                         banner_parent, remote))
-            except Exception:
-                pass  # silently ignore — no internet, repo missing, etc.
+            except Exception as e:
+                print(f"Update check error: {type(e).__name__}: {e}")
         threading.Thread(target=_fetch, daemon=True).start()
 
     def _version_newer(self, remote, local):
@@ -465,12 +476,22 @@ class BudgetApp(tk.Tk):
 
         def _run_update():
             try:
+                import ssl
+                ctx = ssl.create_default_context()
+                if IS_MAC:
+                    for cafile in ("/etc/ssl/cert.pem",
+                                   "/usr/local/etc/openssl/cert.pem",
+                                   "/opt/homebrew/etc/openssl@3/cert.pem"):
+                        if os.path.exists(cafile):
+                            ctx = ssl.create_default_context(cafile=cafile)
+                            break
+
                 files_to_update = ["app.py", "data_manager.py"]
 
                 # Fetch backgrounds manifest if it exists
                 try:
                     murl = f"{REPO_RAW}/backgrounds_manifest.txt"
-                    with urllib.request.urlopen(murl, timeout=5) as r:
+                    with urllib.request.urlopen(murl, timeout=5, context=ctx) as r:
                         bg_files = [l.strip() for l in r.read().decode().splitlines()
                                     if l.strip() and not l.startswith("#")]
                     for bg in bg_files:
@@ -483,7 +504,7 @@ class BudgetApp(tk.Tk):
                     url      = f"{REPO_RAW}/{rel_path}"
                     dest     = os.path.join(APP_DIR, rel_path)
                     os.makedirs(os.path.dirname(dest), exist_ok=True)
-                    with urllib.request.urlopen(url, timeout=15) as r:
+                    with urllib.request.urlopen(url, timeout=15, context=ctx) as r:
                         data = r.read()
                     tmp = dest + ".tmp"
                     with open(tmp, "wb") as f:
