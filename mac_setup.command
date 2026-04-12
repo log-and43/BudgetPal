@@ -134,9 +134,8 @@ cat > "$APPLET_MACOS/BudgetPal" << APPLET_EOF
 export PATH="/usr/local/bin:/usr/bin:/bin:/opt/homebrew/bin:$PATH"
 cd "$SCRIPT_DIR"
 mkdir -p "$HOME/Library/Logs"
-LOG="$HOME/Library/Logs/BudgetPal.log"
-echo "--- Launch $(date) ---" >> "$LOG"
-exec "$PYTHON" "$SCRIPT_DIR/app.py" 2>>"$LOG"
+echo "--- Launch $(date) ---" >> "$HOME/Library/Logs/BudgetPal.log"
+exec "$PYTHON" "$SCRIPT_DIR/app.py" 2>>"$HOME/Library/Logs/BudgetPal.log"
 APPLET_EOF
 chmod +x "$APPLET_MACOS/BudgetPal"
 
