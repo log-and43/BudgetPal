@@ -133,7 +133,8 @@ cat > "$APPLET_MACOS/BudgetPal" << APPLET_EOF
 # Ensure display environment is set for GUI apps launched from .app bundle
 export PATH="/usr/local/bin:/usr/bin:/bin:/opt/homebrew/bin:$PATH"
 cd "$SCRIPT_DIR"
-LOG="$SCRIPT_DIR/budgetpal_launch.log"
+mkdir -p "$HOME/Library/Logs"
+LOG="$HOME/Library/Logs/BudgetPal.log"
 echo "--- Launch $(date) ---" >> "$LOG"
 echo "Python: $PYTHON" >> "$LOG"
 echo "Dir: $SCRIPT_DIR" >> "$LOG"
@@ -191,6 +192,7 @@ ICON_EOF
 # ── 6. Clear quarantine on everything ────────────────────────
 xattr -cr "$APPLET_DIR" 2>/dev/null || true
 xattr -cr "$SCRIPT_DIR" 2>/dev/null || true
+codesign --force --deep --sign - "$APPLET_DIR" 2>/dev/null || true
 
 # ── 7. Register with Launch Services so Finder shows icon ────
 /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister \
