@@ -260,6 +260,7 @@ class BudgetApp(tk.Tk):
 
         # ── Blurred backdrop ─────────────────────────────────────────────
         self.update_idletasks()
+        darkened = None
         try:
             from PIL import ImageGrab, ImageFilter
             screenshot = ImageGrab.grab(bbox=(
@@ -296,7 +297,10 @@ class BudgetApp(tk.Tk):
                 # Composite onto a crop of the darkened backdrop so bg is invisible
                 x = (bw - 420) // 2
                 y = (bh - 315) // 2
-                base = darkened.crop((x, y, x+420, y+315)).convert("RGBA")
+                if darkened is not None:
+                    base = darkened.crop((x, y, x+420, y+315)).convert("RGBA")
+                else:
+                    base = Image.new("RGBA", (420, 315), (0, 0, 0, 255))
                 base.paste(resized, mask=resized)
                 frames.append(ImageTk.PhotoImage(base))
 
