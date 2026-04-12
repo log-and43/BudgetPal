@@ -126,6 +126,7 @@ mkdir -p "$LOCAL_DIR/user_data"
 cp "$SCRIPT_DIR/app.py"          "$LOCAL_DIR/app.py"
 cp "$SCRIPT_DIR/data_manager.py" "$LOCAL_DIR/data_manager.py"
 [ -f "$SCRIPT_DIR/version.txt" ] && cp "$SCRIPT_DIR/version.txt" "$LOCAL_DIR/version.txt"
+[ -d "$SCRIPT_DIR/backgrounds" ] && cp -r "$SCRIPT_DIR/backgrounds" "$LOCAL_DIR/"
 # Copy any existing user data
 if [ -d "$SCRIPT_DIR/user_data" ]; then
     cp -n "$SCRIPT_DIR/user_data/"*.xlsx "$LOCAL_DIR/user_data/" 2>/dev/null || true
