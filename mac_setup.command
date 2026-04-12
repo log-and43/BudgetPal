@@ -119,7 +119,21 @@ echo "→ Installing numpy..."
 echo "✓ Dependencies installed."
 echo ""
 
-# ── 4. Create the .app bundle on Desktop ─────────────────────
+# ── 4. Copy app files to local Mac storage ───────────────────
+LOCAL_DIR="$HOME/Documents/BudgetPal"
+echo "→ Copying app files to $LOCAL_DIR..."
+mkdir -p "$LOCAL_DIR/user_data"
+cp "$SCRIPT_DIR/app.py"          "$LOCAL_DIR/app.py"
+cp "$SCRIPT_DIR/data_manager.py" "$LOCAL_DIR/data_manager.py"
+[ -f "$SCRIPT_DIR/version.txt" ] && cp "$SCRIPT_DIR/version.txt" "$LOCAL_DIR/version.txt"
+# Copy any existing user data
+if [ -d "$SCRIPT_DIR/user_data" ]; then
+    cp -n "$SCRIPT_DIR/user_data/"*.xlsx "$LOCAL_DIR/user_data/" 2>/dev/null || true
+fi
+echo "✓ App files copied."
+echo ""
+
+# ── 5. Create the .app bundle on Desktop ─────────────────────
 APPLET_MACOS="$APPLET_DIR/Contents/MacOS"
 APPLET_RES="$APPLET_DIR/Contents/Resources"
 
@@ -127,15 +141,13 @@ APPLET_RES="$APPLET_DIR/Contents/Resources"
 rm -rf "$APPLET_DIR"
 mkdir -p "$APPLET_MACOS" "$APPLET_RES"
 
-# The launcher executable — uses the EXACT python we just verified
+# The launcher executable — references local copy, not the shared folder
 cat > "$APPLET_MACOS/BudgetPal" << APPLET_EOF
 #!/bin/bash
-# Ensure display environment is set for GUI apps launched from .app bundle
 export PATH="/usr/local/bin:/usr/bin:/bin:/opt/homebrew/bin:$PATH"
-cd "$SCRIPT_DIR"
 mkdir -p "$HOME/Library/Logs"
 echo "--- Launch $(date) ---" >> "$HOME/Library/Logs/BudgetPal.log"
-exec "$PYTHON" "$SCRIPT_DIR/app.py" 2>>"$HOME/Library/Logs/BudgetPal.log"
+exec "$PYTHON" "$HOME/Documents/BudgetPal/app.py" 2>>"$HOME/Library/Logs/BudgetPal.log"
 APPLET_EOF
 chmod +x "$APPLET_MACOS/BudgetPal"
 
