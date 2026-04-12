@@ -515,6 +515,7 @@ class BudgetApp(tk.Tk):
                         except Exception:
                             pass
                     atexit.register(_launch_handler)
+                    self._pending_relaunch = _launch_handler
 
                 self.after(0, _update_done)
             except Exception as e:
@@ -532,7 +533,12 @@ class BudgetApp(tk.Tk):
             tk.Label(banner,
                      text=msg,
                      font=("Arial", 10, "bold"), fg=DARK, bg=GOLD).pack(side="left", padx=8)
-            tk.Button(banner, text="Close App", command=self.destroy,
+            def _close_and_relaunch():
+                if hasattr(self, '_pending_relaunch'):
+                    try: self._pending_relaunch()
+                    except Exception: pass
+                self.destroy()
+            tk.Button(banner, text="Close App", command=_close_and_relaunch,
                       font=("Arial", 9), relief="raised",
                       cursor="hand2").pack(side="right", padx=8)
             tk.Button(banner, text="Later", command=banner.destroy,
