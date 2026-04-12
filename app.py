@@ -390,8 +390,8 @@ class BudgetApp(tk.Tk):
                 exe_path     = os.path.join(APP_DIR, "BudgetPal.exe")
                 pyinstaller_cmd = (
                     "python -m PyInstaller --onefile --windowed --name BudgetPal"
-                    " --add-data user_data;user_data"
-                    " --add-data backgrounds;backgrounds"
+                    " --add-data user_data:user_data"
+                    " --add-data backgrounds:backgrounds"
                     " --hidden-import numpy"
                     " --hidden-import PIL --hidden-import PIL.Image"
                     " --hidden-import PIL.ImageTk --hidden-import PIL.ImageFilter"

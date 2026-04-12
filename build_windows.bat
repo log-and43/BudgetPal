@@ -136,8 +136,8 @@ if not exist "backgrounds" mkdir backgrounds
     --onefile ^
     --windowed ^
     --name BudgetPal ^
-    --add-data "user_data;user_data" ^
-    --add-data "backgrounds;backgrounds" ^
+    --add-data "user_data:user_data" ^
+    --add-data "backgrounds:backgrounds" ^
     --hidden-import numpy ^
     --hidden-import PIL ^
     --hidden-import PIL.Image ^
